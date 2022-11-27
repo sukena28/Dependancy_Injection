@@ -1,4 +1,6 @@
-﻿using Dependency_Injection.Repositories;
+﻿using AutoMapper;
+using Dependency_Injection.Models.DTOs;
+using Dependency_Injection.Repositories;
 using Dependency_Injection.Services;
 
 namespace Dependency_Injection.Service
@@ -7,44 +9,45 @@ namespace Dependency_Injection.Service
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IEnumerable<INotificationService> _messageSenderServices;
-
-        public OrderService(IOrderRepository orderRepository, IEnumerable<INotificationService> messageSenderServices)
+        private readonly IMapper _mapper;
+        public OrderService(
+            IMapper mapper,
+            IOrderRepository orderRepository,
+            IEnumerable<INotificationService> messageSenderServices)
         {
+            _mapper = mapper;
             _orderRepository = orderRepository;
             _messageSenderServices = messageSenderServices;
         }
-        public IEnumerable<Order> GetAll()
+        public IEnumerable<OrderDto> GetAll()
         {
-            return _orderRepository.GetAll();
+            var records = _orderRepository.GetAll();
+
+            return _mapper.Map<IEnumerable<OrderDto>>(records);
         }
 
-        public Order Get(int id)
+        public OrderDto Get(int id)
         {
-            return _orderRepository.GetById(id);
+            var record = _orderRepository.GetById(id);
+
+            return _mapper.Map<OrderDto>(record);
         }
 
-        public Order CompleteOrder(int id)
+        public OrderDto CompleteOrder(int id)
         {
-           var order = _orderRepository.GetById(id);
-
-            if (order == null)
-                throw new Exception($"Order of Id {id} is not exists");
-
-            order.Status = OrderStatus.Completed;
-
-            _orderRepository.Edit(id, order);
-
-            //Notify that Order Status is changed
-            string message = $"Order status with ID: {id} is changes to compolete ";
+            var record = _orderRepository.GetById(id);
 
 
-            //IEnumrable DI Registeration
-            foreach( var messageSender in _messageSenderServices)
+            record.Status = OrderStatus.Completed;
+
+            _orderRepository.Edit(id, record);
+
+            foreach (var messageSender in _messageSenderServices)
             {
-                messageSender.SenMessage(message);
+                messageSender.SenMessage($"Order status with ID: {id} is changes to compolete ");
             }
 
-           return order;
+            return _mapper.Map<OrderDto>(record); 
         }
 
     }

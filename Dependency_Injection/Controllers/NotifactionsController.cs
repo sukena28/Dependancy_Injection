@@ -4,18 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dependency_Injection.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class NotifactionController : ControllerBase
+    [Route("api/[controller]")]
+    public class NotifactionsController : ControllerBase
     {
         private readonly IEnumerable<INotificationService> _notificationServices;
 
-        public NotifactionController(IEnumerable<INotificationService> notificationServiceervices)
+        public NotifactionsController(IEnumerable<INotificationService> notificationServiceervices)
         {
             _notificationServices = notificationServiceervices;
         }
 
         [HttpPost]
-        public IEnumerable<string> Notify(string message)
+        public IActionResult Notify(string message)
         {
             List<string> notifications = new List<string>();
 
@@ -24,7 +24,7 @@ namespace Dependency_Injection.Controllers
                 notifications.Add(messageSender.SenMessage(message));
             }
 
-            return notifications;
+            return Ok(notifications);
 
         }
     }
